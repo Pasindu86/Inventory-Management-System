@@ -30,10 +30,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirect to dashboard if accessing login with auth cookie
+  // Redirect to products if accessing login with auth cookie
   if (isPublicPath && hasAuthCookie) {
-    console.log('Redirecting to dashboard - has auth cookie')
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    console.log('Redirecting to products - has auth cookie')
+    return NextResponse.redirect(new URL('/dashboard/products', request.url))
   }
 
   console.log('Allowing request to proceed')
