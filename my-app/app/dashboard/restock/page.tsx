@@ -22,7 +22,7 @@ export default function RestockPage() {
   const [items, setItems] = useState<ItemDetail[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedItem, setSelectedItem] = useState<ItemDetail | null>(null)
-  const [stockToAdd, setStockToAdd] = useState<number>(0)
+  const [stockToAdd, setStockToAdd] = useState<number | ''>('')
   const [newBuyPrice, setNewBuyPrice] = useState<string>('')
   const [newSellPrice, setNewSellPrice] = useState<string>('')
   const [isUpdating, setIsUpdating] = useState(false)
@@ -72,7 +72,7 @@ export default function RestockPage() {
 
   const handleSelectItem = (item: ItemDetail) => {
     setSelectedItem(item)
-    setStockToAdd(0)
+    setStockToAdd('')
     setNewBuyPrice(item.buy_price.toString())
     setNewSellPrice(item.sell_price.toString())
   }
@@ -83,6 +83,7 @@ export default function RestockPage() {
     // Validate inputs
     const buyPrice = newBuyPrice ? parseFloat(newBuyPrice) : selectedItem.buy_price
     const sellPrice = newSellPrice ? parseFloat(newSellPrice) : selectedItem.sell_price
+    const stockQuantity = typeof stockToAdd === 'number' ? stockToAdd : 0
 
     if (isNaN(buyPrice) || buyPrice < 0) {
       toast.error('Invalid buy price')
@@ -94,12 +95,12 @@ export default function RestockPage() {
       return
     }
 
-    if (stockToAdd < 0) {
+    if (stockQuantity < 0) {
       toast.error('Stock to add cannot be negative')
       return
     }
 
-    if (stockToAdd === 0 && buyPrice === selectedItem.buy_price && sellPrice === selectedItem.sell_price) {
+    if (stockQuantity === 0 && buyPrice === selectedItem.buy_price && sellPrice === selectedItem.sell_price) {
       toast.error('No changes to update')
       return
     }
@@ -107,7 +108,7 @@ export default function RestockPage() {
     setIsUpdating(true)
 
     try {
-      const newStock = selectedItem.current_stock + stockToAdd
+      const newStock = selectedItem.current_stock + stockQuantity
 
       const { error } = await supabase
         .from('items_details')
@@ -124,7 +125,7 @@ export default function RestockPage() {
       
       // Reset form and refresh items
       setSelectedItem(null)
-      setStockToAdd(0)
+      setStockToAdd('')
       setNewBuyPrice('')
       setNewSellPrice('')
       await fetchItems()
@@ -138,7 +139,7 @@ export default function RestockPage() {
 
   const handleCancel = () => {
     setSelectedItem(null)
-    setStockToAdd(0)
+    setStockToAdd('')
     setNewBuyPrice('')
     setNewSellPrice('')
   }
@@ -258,13 +259,13 @@ export default function RestockPage() {
                   <input
                     type="number"
                     value={stockToAdd}
-                    onChange={(e) => setStockToAdd(parseInt(e.target.value) || 0)}
+                    onChange={(e) => setStockToAdd(e.target.value === '' ? '' : parseInt(e.target.value))}
                     onWheel={(e) => e.currentTarget.blur()}
                     min="0"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder="Enter quantity to add"
                   />
-                  {stockToAdd > 0 && (
+                  {(typeof stockToAdd === 'number' && stockToAdd > 0) && (
                     <p className="mt-1 text-sm text-green-600">
                       New stock will be: {selectedItem.current_stock + stockToAdd}
                     </p>
