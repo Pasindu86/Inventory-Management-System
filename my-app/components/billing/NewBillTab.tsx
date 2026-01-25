@@ -25,8 +25,8 @@ export default function NewBillTab() {
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [customerAddress, setCustomerAddress] = useState('')
-  const [discountPrice, setDiscountPrice] = useState(0)
-  const [courierPrice, setCourierPrice] = useState(0)
+  const [discountPrice, setDiscountPrice] = useState<number | ''>('')
+  const [courierPrice, setCourierPrice] = useState<number | ''>('')
   const [isLoading, setIsLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
 
@@ -126,7 +126,10 @@ export default function NewBillTab() {
   }
 
   const calculateTotal = () => {
-    return calculateSubtotal() - discountPrice + courierPrice
+    const subtotal = calculateSubtotal()
+    const discount = typeof discountPrice === 'number' ? discountPrice : 0
+    const courier = typeof courierPrice === 'number' ? courierPrice : 0
+    return subtotal - discount + courier
   }
 
   const handleSubmit = async () => {
@@ -156,8 +159,8 @@ export default function NewBillTab() {
         p_name: customerName || 'Walk-in Customer',
         p_phone: customerPhone || '',
         p_address: customerAddress || '',
-        p_discount: discountPrice,
-        p_courier: courierPrice,
+        p_discount: typeof discountPrice === 'number' ? discountPrice : 0,
+        p_courier: typeof courierPrice === 'number' ? courierPrice : 0,
         p_total: total,
         p_items: itemsForRPC,
       })
@@ -187,8 +190,8 @@ export default function NewBillTab() {
         customerAddress: customerAddress || '',
         items: cart,
         subtotal: calculateSubtotal(),
-        discount: discountPrice,
-        courier: courierPrice,
+        discount: typeof discountPrice === 'number' ? discountPrice : 0,
+        courier: typeof courierPrice === 'number' ? courierPrice : 0,
         total: total,
       })
 
@@ -197,8 +200,8 @@ export default function NewBillTab() {
       setCustomerName('')
       setCustomerPhone('')
       setCustomerAddress('')
-      setDiscountPrice(0)
-      setCourierPrice(0)
+      setDiscountPrice('')
+      setCourierPrice('')
       fetchItems() // Refresh items to update stock
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to create bill')
@@ -354,7 +357,7 @@ export default function NewBillTab() {
               <input
                 type="number"
                 value={discountPrice}
-                onChange={(e) => setDiscountPrice(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setDiscountPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 onWheel={(e) => e.currentTarget.blur()}
                 placeholder="0.00"
                 min="0"
@@ -370,7 +373,7 @@ export default function NewBillTab() {
               <input
                 type="number"
                 value={courierPrice}
-                onChange={(e) => setCourierPrice(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setCourierPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 onWheel={(e) => e.currentTarget.blur()}
                 placeholder="0.00"
                 min="0"
@@ -387,14 +390,14 @@ export default function NewBillTab() {
               <span className="font-medium">Rs. {calculateSubtotal().toFixed(2)}</span>
             </div>
             
-            {discountPrice > 0 && (
+            {(typeof discountPrice === 'number' && discountPrice > 0) && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Discount:</span>
                 <span className="font-medium text-red-600">- Rs. {discountPrice.toFixed(2)}</span>
               </div>
             )}
-            
-            {courierPrice > 0 && (
+
+            {(typeof courierPrice === 'number' && courierPrice > 0) && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Courier:</span>
                 <span className="font-medium">+ Rs. {courierPrice.toFixed(2)}</span>
