@@ -10,6 +10,7 @@ interface InvoiceData {
   billId: string
   customerName: string
   customerPhone: string
+  customerAddress: string
   items: InvoiceItem[]
   subtotal: number
   discount: number
@@ -28,35 +29,44 @@ export function generateInvoicePDF(data: InvoiceData) {
   doc.setFont('helvetica', 'bold')
   doc.text('BENLY PARTS LK', 105, 20, { align: 'center' })
   
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'italic')
+  doc.text('Genuine Honda Benly & Vintage Motorcycle Parts', 105, 26, { align: 'center' })
+  
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text('0758280611 / 0768280611', 105, 27, { align: 'center' })
+  doc.text('0758280611 / 0768280611', 105, 32, { align: 'center' })
   
   // Invoice Title
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
-  doc.text('INVOICE', 105, 40, { align: 'center' })
+  doc.text('INVOICE', 105, 45, { align: 'center' })
   
   // Invoice Details
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Invoice #: ${data.billId}`, 20, 50)
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 56)
-  doc.text(`Time: ${new Date().toLocaleTimeString()}`, 20, 62)
+  doc.text(`Invoice #: ${data.billId}`, 20, 55)
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 61)
+  doc.text(`Time: ${new Date().toLocaleTimeString()}`, 20, 67)
   
   // Customer Details
   if (data.customerName) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Customer Details:', 20, 72)
+    doc.text('Customer Details:', 20, 77)
     doc.setFont('helvetica', 'normal')
-    doc.text(`Name: ${data.customerName}`, 20, 78)
+    doc.text(`Name: ${data.customerName}`, 20, 83)
+    let yPos = 89
     if (data.customerPhone) {
-      doc.text(`Phone: ${data.customerPhone}`, 20, 84)
+      doc.text(`Phone: ${data.customerPhone}`, 20, yPos)
+      yPos += 6
+    }
+    if (data.customerAddress) {
+      doc.text(`Address: ${data.customerAddress}`, 20, yPos)
     }
   }
   
   // Table Header
-  const startY = data.customerName ? 95 : 75
+  const startY = data.customerName ? (data.customerAddress || data.customerPhone ? 105 : 100) : 80
   doc.setFont('helvetica', 'bold')
   doc.setFillColor(240, 240, 240)
   doc.rect(20, startY, 170, 8, 'F')

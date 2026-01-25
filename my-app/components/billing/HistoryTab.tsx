@@ -8,6 +8,7 @@ interface Bill {
   id: string
   name: string
   phone: string
+  address: string
   discount_price: number
   courier_price: number
   total_amount: number
@@ -103,6 +104,9 @@ export default function HistoryTab() {
                   Phone
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Address
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Discount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -127,6 +131,9 @@ export default function HistoryTab() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {bill.phone || '-'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={bill.address}>
+                    {bill.address || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {bill.discount_price > 0 ? `Rs. ${bill.discount_price.toFixed(2)}` : '-'}
