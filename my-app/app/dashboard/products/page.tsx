@@ -20,6 +20,7 @@ export default function ProductsPage() {
   const [userEmail, setUserEmail] = useState('')
   const [items, setItems] = useState<ItemDetail[]>([])
   const [selectedItem, setSelectedItem] = useState<ItemDetail | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
   const checkUser = useCallback(async () => {
@@ -61,6 +62,12 @@ export default function ProductsPage() {
     setSelectedItem(selectedItem?.id === item.id ? null : item)
   }
 
+  // Filter items based on search query
+  const filteredItems = items.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.code.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
@@ -73,6 +80,47 @@ export default function ProductsPage() {
     <DashboardLayoutWrapper userEmail={userEmail} onLogout={handleLogout}>
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Products</h2>
+        
+        {/* Search Bar */}
+        <div className="mb-4 sm:mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by name or code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 sm:py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+            />
+            <svg
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-xs sm:text-sm text-gray-600">
+              Found {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
+            </p>
+          )}
+        </div>
         
         <div className="overflow-x-auto -mx-4 sm:mx-0">
           <div className="inline-block min-w-full align-middle">
@@ -87,14 +135,14 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {items.length === 0 ? (
+              {filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                    No products found. Add some products to get started.
+                    {searchQuery ? 'No products found matching your search.' : 'No products found. Add some products to get started.'}
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
+                filteredItems.map((item) => (
                   <Fragment key={item.id}>
                     <tr
                       onClick={() => handleRowClick(item)}

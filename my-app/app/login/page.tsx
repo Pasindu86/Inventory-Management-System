@@ -54,8 +54,8 @@ export default function LoginPage() {
         // Wait a moment for cookies to be set, then redirect
         await new Promise(resolve => setTimeout(resolve, 500))
         
-        console.log('Now redirecting to dashboard...')
-        window.location.href = '/dashboard'
+        console.log('Now redirecting to products...')
+        window.location.href = '/dashboard/products'
       } else {
         console.error('No session returned even though no error!')
         throw new Error('No session returned')
