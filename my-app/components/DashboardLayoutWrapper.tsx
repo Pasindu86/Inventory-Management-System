@@ -18,6 +18,7 @@ export default function DashboardLayoutWrapper({ children, userEmail, onLogout }
     { name: 'Products', path: '/dashboard/products', icon: '📦' },
     { name: 'Billing', path: '/dashboard/billing', icon: '🧾' },
     { name: 'Restock', path: '/dashboard/restock', icon: '📥' },
+    { name: 'New Product', path: '/dashboard/new-product', icon: '➕' },
   ]
 
   const isActive = (path: string) => pathname === path
