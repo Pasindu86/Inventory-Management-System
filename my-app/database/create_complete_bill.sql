@@ -3,10 +3,12 @@
 
 -- Drop the existing function first
 DROP FUNCTION IF EXISTS create_complete_bill(text,text,numeric,numeric,numeric,jsonb);
+DROP FUNCTION IF EXISTS create_complete_bill(text,text,text,numeric,numeric,numeric,jsonb);
 
 CREATE OR REPLACE FUNCTION create_complete_bill(
   p_name TEXT,
   p_phone TEXT,
+  p_address TEXT,
   p_discount NUMERIC,
   p_courier NUMERIC,
   p_total NUMERIC,
@@ -23,8 +25,8 @@ DECLARE
   v_current_stock INTEGER;
 BEGIN
   -- Insert into bills table
-  INSERT INTO public.bills (name, phone, discount_price, courier_price, total_amount)
-  VALUES (p_name, p_phone, p_discount, p_courier, p_total)
+  INSERT INTO public.bills (name, phone, address, discount_price, courier_price, total_amount)
+  VALUES (p_name, p_phone, p_address, p_discount, p_courier, p_total)
   RETURNING id INTO v_bill_id;
 
   -- Loop through items and process each one
@@ -75,6 +77,7 @@ $$;
 -- SELECT * FROM create_complete_bill(
 --   'John Doe',
 --   '0758280611',
+--   '123 Main Street, Colombo',
 --   100.00,
 --   50.00,
 --   1450.00,

@@ -1,18 +1,37 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Toaster } from 'react-hot-toast'
 import NewBillTab from '@/components/billing/NewBillTab'
 import HistoryTab from '@/components/billing/HistoryTab'
 
 export default function BillingPage() {
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new')
+  const router = useRouter()
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <Toaster position="top-right" />
       
       <div className="max-w-7xl mx-auto">
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => router.push('/dashboard/products')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
+            aria-label="Back to Products"
+          >
+            <svg 
+              className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="font-medium">Back to Products</span>
+          </button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Billing & Invoices</h1>
         
         {/* Tabs */}

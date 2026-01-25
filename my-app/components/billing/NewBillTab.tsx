@@ -24,6 +24,7 @@ export default function NewBillTab() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  const [customerAddress, setCustomerAddress] = useState('')
   const [discountPrice, setDiscountPrice] = useState(0)
   const [courierPrice, setCourierPrice] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -154,6 +155,7 @@ export default function NewBillTab() {
       const { data, error } = await supabase.rpc('create_complete_bill', {
         p_name: customerName || 'Walk-in Customer',
         p_phone: customerPhone || '',
+        p_address: customerAddress || '',
         p_discount: discountPrice,
         p_courier: courierPrice,
         p_total: total,
@@ -182,6 +184,7 @@ export default function NewBillTab() {
         billId: result.bill_id,
         customerName: customerName || 'Walk-in Customer',
         customerPhone: customerPhone || '',
+        customerAddress: customerAddress || '',
         items: cart,
         subtotal: calculateSubtotal(),
         discount: discountPrice,
@@ -193,6 +196,7 @@ export default function NewBillTab() {
       setCart([])
       setCustomerName('')
       setCustomerPhone('')
+      setCustomerAddress('')
       setDiscountPrice(0)
       setCourierPrice(0)
       fetchItems() // Refresh items to update stock
@@ -327,6 +331,19 @@ export default function NewBillTab() {
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="Enter phone number"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Address (Optional)
+              </label>
+              <textarea
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                placeholder="Enter customer address"
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
             </div>
 
