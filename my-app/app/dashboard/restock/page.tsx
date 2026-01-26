@@ -164,14 +164,14 @@ export default function RestockPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by code or name..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Items List */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">Select Item</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Select Item</h3>
             <div className="overflow-x-auto -mx-4 sm:mx-0">
               <div className="inline-block min-w-full align-middle">
                 <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg">
@@ -228,7 +228,7 @@ export default function RestockPage() {
 
           {/* Right Column: Update Form */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">Update Details</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Update Details</h3>
             {!selectedItem ? (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
                 Select an item from the list to update stock and prices
@@ -237,7 +237,7 @@ export default function RestockPage() {
               <div className="bg-gray-50 rounded-lg p-6 space-y-4">
                 {/* Item Info */}
                 <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-bold text-lg text-gray-800">{selectedItem.name}</h4>
+                  <h4 className="font-bold text-lg text-gray-900">{selectedItem.name}</h4>
                   <p className="text-sm text-gray-600">Code: {selectedItem.code}</p>
                   {selectedItem.description && (
                     <p className="text-sm text-gray-600 mt-2">{selectedItem.description}</p>
@@ -262,7 +262,7 @@ export default function RestockPage() {
                     onChange={(e) => setStockToAdd(e.target.value === '' ? '' : parseInt(e.target.value))}
                     onWheel={(e) => e.currentTarget.blur()}
                     min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                     placeholder="Enter quantity to add"
                   />
                   {(typeof stockToAdd === 'number' && stockToAdd > 0) && (
@@ -284,7 +284,7 @@ export default function RestockPage() {
                     onWheel={(e) => e.currentTarget.blur()}
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                     placeholder="Enter new buy price"
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -304,7 +304,7 @@ export default function RestockPage() {
                     onWheel={(e) => e.currentTarget.blur()}
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                     placeholder="Enter new sell price"
                   />
                   <p className="mt-1 text-xs text-gray-500">

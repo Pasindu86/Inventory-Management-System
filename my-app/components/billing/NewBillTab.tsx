@@ -212,20 +212,20 @@ export default function NewBillTab() {
   }
 
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="p-3 sm:p-4 md:p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Left Column: Item Search & Cart */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Add Items</h2>
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Add Items</h2>
           
           {/* Search Bar */}
-          <div className="relative mb-6">
+          <div className="relative mb-4 sm:mb-6">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search items by code or name..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
             />
             
             {/* Dropdown */}
@@ -235,10 +235,10 @@ export default function NewBillTab() {
                   <button
                     key={item.id}
                     onClick={() => addToCart(item)}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-100 border-b last:border-b-0"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-left hover:bg-gray-100 border-b last:border-b-0"
                   >
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm sm:text-base font-medium text-gray-900">{item.name}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">
                       Code: {item.code} | Price: Rs. {item.sell_price.toFixed(2)} | Stock: {item.current_stock}
                     </div>
                   </button>
@@ -248,26 +248,26 @@ export default function NewBillTab() {
           </div>
 
           {/* Cart */}
-          <h3 className="text-lg font-semibold mb-3">Cart Items</h3>
+          <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-800">Cart Items</h3>
           {cart.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No items in cart</p>
+            <p className="text-sm sm:text-base text-gray-500 text-center py-6 sm:py-8">No items in cart</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {cart.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg"
                 >
-                  <div className="flex-1">
-                    <h4 className="font-medium">{item.name}</h4>
-                    <p className="text-sm text-gray-600">Rs. {item.sell_price.toFixed(2)}</p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm sm:text-base font-medium truncate text-gray-900">{item.name}</h4>
+                    <p className="text-xs sm:text-sm text-gray-600 font-medium">Rs. {item.sell_price.toFixed(2)}</p>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300"
+                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm sm:text-base text-gray-900 font-semibold"
                       >
                         -
                       </button>
@@ -275,19 +275,19 @@ export default function NewBillTab() {
                         type="number"
                         value={item.quantity}
                         onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 0)}
-                        className="w-16 text-center border border-gray-300 rounded px-2 py-1"
+                        className="w-12 sm:w-16 text-center border border-gray-300 rounded px-1 sm:px-2 py-1 text-sm text-gray-900 bg-white"
                         min="1"
                         max={item.current_stock}
                       />
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300"
+                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm sm:text-base text-gray-900 font-semibold"
                       >
                         +
                       </button>
                     </div>
                     
-                    <div className="w-24 text-right font-medium">
+                    <div className="w-20 sm:w-24 text-right text-sm sm:text-base font-medium text-gray-900">
                       Rs. {(item.sell_price * item.quantity).toFixed(2)}
                     </div>
                     
@@ -308,9 +308,9 @@ export default function NewBillTab() {
 
         {/* Right Column: Customer Info & Summary */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Bill Details</h2>
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Bill Details</h2>
           
-          <div className="space-y-4 mb-6">
+          <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Customer Name (Optional)
@@ -320,7 +320,7 @@ export default function NewBillTab() {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Enter customer name"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
               />
             </div>
 
@@ -333,7 +333,7 @@ export default function NewBillTab() {
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="Enter phone number"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
               />
             </div>
 
@@ -346,7 +346,7 @@ export default function NewBillTab() {
                 onChange={(e) => setCustomerAddress(e.target.value)}
                 placeholder="Enter customer address"
                 rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 bg-white"
               />
             </div>
 
@@ -362,7 +362,7 @@ export default function NewBillTab() {
                 placeholder="0.00"
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
               />
             </div>
 
@@ -378,35 +378,35 @@ export default function NewBillTab() {
                 placeholder="0.00"
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
               />
             </div>
           </div>
 
           {/* Summary */}
-          <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal:</span>
-              <span className="font-medium">Rs. {calculateSubtotal().toFixed(2)}</span>
+          <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-2">
+            <div className="flex justify-between text-xs sm:text-sm">
+              <span className="text-gray-700 font-medium">Subtotal:</span>
+              <span className="font-medium text-gray-900">Rs. {calculateSubtotal().toFixed(2)}</span>
             </div>
             
             {(typeof discountPrice === 'number' && discountPrice > 0) && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Discount:</span>
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="text-gray-700 font-medium">Discount:</span>
                 <span className="font-medium text-red-600">- Rs. {discountPrice.toFixed(2)}</span>
               </div>
             )}
 
             {(typeof courierPrice === 'number' && courierPrice > 0) && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Courier:</span>
-                <span className="font-medium">+ Rs. {courierPrice.toFixed(2)}</span>
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="text-gray-700 font-medium">Courier:</span>
+                <span className="font-medium text-gray-900">+ Rs. {courierPrice.toFixed(2)}</span>
               </div>
             )}
             
             <div className="border-t border-gray-300 pt-2 mt-2">
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total:</span>
+              <div className="flex justify-between text-base sm:text-lg font-bold">
+                <span className="text-gray-900">Total:</span>
                 <span className="text-blue-600">Rs. {calculateTotal().toFixed(2)}</span>
               </div>
             </div>
@@ -416,7 +416,7 @@ export default function NewBillTab() {
           <button
             onClick={handleSubmit}
             disabled={isLoading || cart.length === 0}
-            className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="w-full mt-4 sm:mt-6 bg-blue-600 text-white py-2.5 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? 'Processing...' : 'Complete Sale & Generate Invoice'}
           </button>
