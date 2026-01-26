@@ -29,14 +29,29 @@ export default function RestockPage() {
   const router = useRouter()
 
   const checkUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
-      router.push('/login')
-    } else {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('Supabase session error:', error)
+        if (error.message?.toLowerCase().includes('invalid refresh token')) {
+          await supabase.auth.signOut()
+        }
+      }
+
+      if (!session) {
+        setLoading(false)
+        router.push('/login')
+        return
+      }
+
       setUserEmail(session.user.email || '')
       await fetchItems()
       setLoading(false)
+    } catch (err) {
+      console.error('Error validating session:', err)
+      setLoading(false)
+      router.push('/login')
     }
   }, [router])
 
@@ -157,6 +172,26 @@ export default function RestockPage() {
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Restock Inventory</h2>
         
+        {/* Summary Stats */}
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Total Items</p>
+            <p className="text-2xl font-bold text-blue-600">{items.length}</p>
+          </div>
+          <div className="bg-red-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Low Stock Items (≤5)</p>
+            <p className="text-2xl font-bold text-red-600">
+              {items.filter(item => item.current_stock <= 5).length}
+            </p>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Total Stock Value</p>
+            <p className="text-2xl font-bold text-green-600">
+              Rs {items.reduce((sum, item) => sum + (item.current_stock * item.buy_price), 0).toFixed(2)}
+            </p>
+          </div>
+        </div>
+        
         {/* Search Bar */}
         <div className="mb-6">
           <input
@@ -164,14 +199,14 @@ export default function RestockPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by code or name..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Items List */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">Select Item</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Select Item</h3>
             <div className="overflow-x-auto -mx-4 sm:mx-0">
               <div className="inline-block min-w-full align-middle">
                 <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg">
@@ -228,7 +263,7 @@ export default function RestockPage() {
 
           {/* Right Column: Update Form */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">Update Details</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Update Details</h3>
             {!selectedItem ? (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
                 Select an item from the list to update stock and prices
@@ -237,7 +272,7 @@ export default function RestockPage() {
               <div className="bg-gray-50 rounded-lg p-6 space-y-4">
                 {/* Item Info */}
                 <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-bold text-lg text-gray-800">{selectedItem.name}</h4>
+                  <h4 className="font-bold text-lg text-gray-900">{selectedItem.name}</h4>
                   <p className="text-sm text-gray-600">Code: {selectedItem.code}</p>
                   {selectedItem.description && (
                     <p className="text-sm text-gray-600 mt-2">{selectedItem.description}</p>
@@ -262,7 +297,7 @@ export default function RestockPage() {
                     onChange={(e) => setStockToAdd(e.target.value === '' ? '' : parseInt(e.target.value))}
                     onWheel={(e) => e.currentTarget.blur()}
                     min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                     placeholder="Enter quantity to add"
                   />
                   {(typeof stockToAdd === 'number' && stockToAdd > 0) && (
@@ -284,7 +319,7 @@ export default function RestockPage() {
                     onWheel={(e) => e.currentTarget.blur()}
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                     placeholder="Enter new buy price"
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -304,7 +339,7 @@ export default function RestockPage() {
                     onWheel={(e) => e.currentTarget.blur()}
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                     placeholder="Enter new sell price"
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -331,26 +366,6 @@ export default function RestockPage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Summary Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Total Items</p>
-            <p className="text-2xl font-bold text-blue-600">{items.length}</p>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Low Stock Items (≤5)</p>
-            <p className="text-2xl font-bold text-red-600">
-              {items.filter(item => item.current_stock <= 5).length}
-            </p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Total Stock Value</p>
-            <p className="text-2xl font-bold text-green-600">
-              Rs {items.reduce((sum, item) => sum + (item.current_stock * item.buy_price), 0).toFixed(2)}
-            </p>
           </div>
         </div>
       </div>

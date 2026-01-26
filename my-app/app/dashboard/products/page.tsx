@@ -24,14 +24,29 @@ export default function ProductsPage() {
   const router = useRouter()
 
   const checkUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
-      router.push('/login')
-    } else {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('Supabase session error:', error)
+        if (error.message?.toLowerCase().includes('invalid refresh token')) {
+          await supabase.auth.signOut()
+        }
+      }
+
+      if (!session) {
+        setLoading(false)
+        router.push('/login')
+        return
+      }
+
       setUserEmail(session.user.email || '')
       await fetchItems()
       setLoading(false)
+    } catch (err) {
+      console.error('Error validating session:', err)
+      setLoading(false)
+      router.push('/login')
     }
   }, [router])
 
@@ -81,6 +96,32 @@ export default function ProductsPage() {
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Products</h2>
         
+        {/* Summary Stats */}
+        <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Total Items</p>
+            <p className="text-xl sm:text-2xl font-bold text-blue-600">{items.length}</p>
+          </div>
+          <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Total Stock Value</p>
+            <p className="text-xl sm:text-2xl font-bold text-purple-600">
+              Rs {items.reduce((sum, item) => sum + (item.current_stock * item.buy_price), 0).toFixed(2)}
+            </p>
+          </div>
+          <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Potential Revenue</p>
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
+              Rs {items.reduce((sum, item) => sum + (item.current_stock * item.sell_price), 0).toFixed(2)}
+            </p>
+          </div>
+          <div className="bg-emerald-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Potential Profit</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-600">
+              Rs {items.reduce((sum, item) => sum + (item.current_stock * (item.sell_price - item.buy_price)), 0).toFixed(2)}
+            </p>
+          </div>
+        </div>
+        
         {/* Search Bar */}
         <div className="mb-4 sm:mb-6">
           <div className="relative">
@@ -89,7 +130,7 @@ export default function ProductsPage() {
               placeholder="Search by name or code..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 sm:py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-4 py-2 sm:py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-400 bg-white"
             />
             <svg
               className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
