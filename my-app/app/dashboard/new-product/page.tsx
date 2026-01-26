@@ -33,14 +33,29 @@ export default function NewProductPage() {
   const router = useRouter()
 
   const checkUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
-      router.push('/login')
-    } else {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('Supabase session error:', error)
+        if (error.message?.toLowerCase().includes('invalid refresh token')) {
+          await supabase.auth.signOut()
+        }
+      }
+
+      if (!session) {
+        setLoading(false)
+        router.push('/login')
+        return
+      }
+
       setUserEmail(session.user.email || '')
       await fetchItems()
       setLoading(false)
+    } catch (err) {
+      console.error('Error validating session:', err)
+      setLoading(false)
+      router.push('/login')
     }
   }, [router])
 

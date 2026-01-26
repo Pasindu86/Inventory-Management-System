@@ -35,8 +35,8 @@ export default function BillingPage() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Billing & Invoices</h1>
         
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-4 sm:mb-6 overflow-x-auto">
-          <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
+        <div className="border-b border-gray-200 mb-4 sm:mb-6">
+          <nav className="-mb-px flex space-x-4 sm:space-x-8">
             <button
               onClick={() => setActiveTab('new')}
               className={`${

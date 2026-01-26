@@ -24,14 +24,29 @@ export default function ProductsPage() {
   const router = useRouter()
 
   const checkUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
-      router.push('/login')
-    } else {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('Supabase session error:', error)
+        if (error.message?.toLowerCase().includes('invalid refresh token')) {
+          await supabase.auth.signOut()
+        }
+      }
+
+      if (!session) {
+        setLoading(false)
+        router.push('/login')
+        return
+      }
+
       setUserEmail(session.user.email || '')
       await fetchItems()
       setLoading(false)
+    } catch (err) {
+      console.error('Error validating session:', err)
+      setLoading(false)
+      router.push('/login')
     }
   }, [router])
 
@@ -80,6 +95,32 @@ export default function ProductsPage() {
     <DashboardLayoutWrapper userEmail={userEmail} onLogout={handleLogout}>
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Products</h2>
+        
+        {/* Summary Stats */}
+        <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Total Items</p>
+            <p className="text-xl sm:text-2xl font-bold text-blue-600">{items.length}</p>
+          </div>
+          <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Total Stock Value</p>
+            <p className="text-xl sm:text-2xl font-bold text-purple-600">
+              Rs {items.reduce((sum, item) => sum + (item.current_stock * item.buy_price), 0).toFixed(2)}
+            </p>
+          </div>
+          <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Potential Revenue</p>
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
+              Rs {items.reduce((sum, item) => sum + (item.current_stock * item.sell_price), 0).toFixed(2)}
+            </p>
+          </div>
+          <div className="bg-emerald-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Potential Profit</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-600">
+              Rs {items.reduce((sum, item) => sum + (item.current_stock * (item.sell_price - item.buy_price)), 0).toFixed(2)}
+            </p>
+          </div>
+        </div>
         
         {/* Search Bar */}
         <div className="mb-4 sm:mb-6">

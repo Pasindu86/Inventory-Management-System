@@ -39,7 +39,7 @@ export default function DashboardLayoutWrapper({ children, userEmail, onLogout }
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">Inventory Management</h1>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">BENLY PARTS Lk</h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <span className="hidden sm:inline text-gray-600 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{userEmail}</span>
