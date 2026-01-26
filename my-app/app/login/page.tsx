@@ -70,11 +70,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Inventory Management</h1>
-          <p className="text-gray-600">Sign in to your account</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 sm:px-6">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Inventory Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -88,7 +88,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition text-gray-900 placeholder-gray-400"
               placeholder="Enter your email"
             />
           </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition text-gray-900 placeholder-gray-400"
                 placeholder="Enter your password"
               />
               <button

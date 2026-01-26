@@ -188,7 +188,7 @@ export default function NewProductPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Form */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Product Information</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Product Information</h3>
             <div className="space-y-4">
               {/* Code */}
               <div>
@@ -200,7 +200,7 @@ export default function NewProductPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="Enter product code"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Must be unique in the system
@@ -217,7 +217,7 @@ export default function NewProductPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter product name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
                 />
               </div>
 
@@ -231,7 +231,7 @@ export default function NewProductPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter product description"
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 bg-white"
                 />
               </div>
 
@@ -247,7 +247,7 @@ export default function NewProductPage() {
                   onWheel={(e) => e.currentTarget.blur()}
                   min="0"
                   placeholder="Enter stock amount"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                 />
               </div>
 
@@ -264,7 +264,7 @@ export default function NewProductPage() {
                   min="0"
                   step="0.01"
                   placeholder="Enter buy price"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                 />
               </div>
 
@@ -281,7 +281,7 @@ export default function NewProductPage() {
                   min="0"
                   step="0.01"
                   placeholder="Enter sell price"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                 />
               </div>
 
@@ -307,7 +307,7 @@ export default function NewProductPage() {
 
           {/* Right Column: Current Products List */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Existing Products</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Existing Products</h3>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-600 mb-3">
                 Total Products: <span className="font-semibold text-gray-800">{items.length}</span>
