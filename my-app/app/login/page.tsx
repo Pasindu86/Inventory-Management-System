@@ -73,8 +73,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 sm:px-6">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
         <div className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Inventory Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Sign in to your account</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">BENLY PARTS Lk</h1>
+          <p className="text-sm sm:text-base text-gray-600">Inventory Management</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6" suppressHydrationWarning>

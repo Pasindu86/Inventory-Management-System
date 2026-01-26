@@ -12,8 +12,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata: Metadata = {
-  title: "Inventory Management",
-  description: "Inventory Management System",
+  title: "BENLY PARTS Lk - Inventory Management",
+  description: "Inventory Management System for BENLY PARTS Lk",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export const viewport = {

@@ -65,6 +65,32 @@ export default function HistoryTab() {
     })
   }
 
+  // Calculate monthly revenue (current month)
+  const calculateMonthlyRevenue = () => {
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    
+    return filteredBills
+      .filter(bill => {
+        const billDate = new Date(bill.created_at)
+        return billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear
+      })
+      .reduce((sum, bill) => sum + bill.total_amount, 0)
+  }
+
+  // Calculate yearly revenue (current year)
+  const calculateYearlyRevenue = () => {
+    const currentYear = new Date().getFullYear()
+    
+    return filteredBills
+      .filter(bill => {
+        const billDate = new Date(bill.created_at)
+        return billDate.getFullYear() === currentYear
+      })
+      .reduce((sum, bill) => sum + bill.total_amount, 0)
+  }
+
   return (
     <div className="p-3 sm:p-4 md:p-6">
       <div className="mb-4 sm:mb-6">
@@ -79,6 +105,34 @@ export default function HistoryTab() {
           className="w-full max-w-md px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
         />
       </div>
+
+      {/* Summary Stats - Moved to top */}
+      {!isLoading && filteredBills.length > 0 && (
+        <div className="mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Total Bills</p>
+            <p className="text-xl sm:text-2xl font-bold text-blue-600">{filteredBills.length}</p>
+          </div>
+          <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Monthly Revenue</p>
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
+              Rs. {calculateMonthlyRevenue().toFixed(2)}
+            </p>
+          </div>
+          <div className="bg-emerald-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Year Revenue</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-600">
+              Rs. {calculateYearlyRevenue().toFixed(2)}
+            </p>
+          </div>
+          <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-gray-600">Total Discounts</p>
+            <p className="text-xl sm:text-2xl font-bold text-purple-600">
+              Rs. {filteredBills.reduce((sum, bill) => sum + bill.discount_price, 0).toFixed(2)}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Loading State */}
       {isLoading ? (
@@ -154,28 +208,6 @@ export default function HistoryTab() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Summary Stats */}
-      {!isLoading && filteredBills.length > 0 && (
-        <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
-            <p className="text-xs sm:text-sm text-gray-600">Total Bills</p>
-            <p className="text-xl sm:text-2xl font-bold text-blue-600">{filteredBills.length}</p>
-          </div>
-          <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
-            <p className="text-xs sm:text-sm text-gray-600">Total Revenue</p>
-            <p className="text-xl sm:text-2xl font-bold text-green-600">
-              Rs. {filteredBills.reduce((sum, bill) => sum + bill.total_amount, 0).toFixed(2)}
-            </p>
-          </div>
-          <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
-            <p className="text-xs sm:text-sm text-gray-600">Total Discounts</p>
-            <p className="text-xl sm:text-2xl font-bold text-purple-600">
-              Rs. {filteredBills.reduce((sum, bill) => sum + bill.discount_price, 0).toFixed(2)}
-            </p>
           </div>
         </div>
       )}
