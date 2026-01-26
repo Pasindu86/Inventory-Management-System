@@ -77,12 +77,13 @@ export default function LoginPage() {
           <p className="text-sm sm:text-base text-gray-600">Sign in to your account</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-6" suppressHydrationWarning>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
             </label>
             <input
+              suppressHydrationWarning
               id="email"
               type="email"
               value={email}
@@ -99,6 +100,7 @@ export default function LoginPage() {
             </label>
             <div className="relative">
               <input
+                suppressHydrationWarning
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
