@@ -112,8 +112,25 @@ export default function NewProductPage() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut()
+      
+      // Clear all Supabase cookies
+      document.cookie.split(";").forEach((c) => {
+        const cookieName = c.split("=")[0].trim()
+        if (cookieName.startsWith('sb-')) {
+          document.cookie = cookieName + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'
+        }
+      })
+      
+      // Hard redirect to clear all state
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still redirect even if there's an error
+      window.location.href = '/login'
+    }
   }
 
   const validateForm = (): boolean => {
@@ -216,8 +233,11 @@ export default function NewProductPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-        <div className="text-blue-600 text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -225,128 +245,198 @@ export default function NewProductPage() {
   return (
     <DashboardLayoutWrapper userEmail={userEmail} onLogout={handleLogout}>
       <Toaster position="top-right" />
-      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Add New Product</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column: Form */}
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Product Information</h3>
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              {/* Code */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Code <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter product code"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Must be unique in the system
-                </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Add New Product</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Create a new inventory item</p>
+          </div>
+          <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-xl">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <span className="font-medium">{items.length} products in inventory</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+          {/* Left Column: Form - Takes 3 columns on xl */}
+          <div className="xl:col-span-3 bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Product Information</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Fill in the details below</p>
+                </div>
               </div>
+            </div>
+            
+            <form className="p-5 space-y-5" onSubmit={(e) => e.preventDefault()}>
+              {/* Code & Name Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Product Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="e.g., SKU-001"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-mono"
+                  />
+                  <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">Must be unique</p>
+                </div>
 
-              {/* Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter product name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Product Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Enter product name"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                  />
+                </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description (Optional)
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Description <span className="text-slate-400 dark:text-slate-500 font-normal">(Optional)</span>
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Enter product description"
+                  placeholder="Enter product description..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 bg-white"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all resize-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                 />
               </div>
 
-              {/* Stock Amount */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Initial Stock Amount <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={stockAmount}
-                  onChange={(e) => setStockAmount(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  onKeyDown={handleKeyDown}
-                  min="0"
-                  placeholder="Enter stock amount"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
-                />
+              {/* Stock & Prices Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Initial Stock <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={stockAmount}
+                      onChange={(e) => setStockAmount(e.target.value === '' ? '' : parseInt(e.target.value))}
+                      onWheel={(e) => e.currentTarget.blur()}
+                      onKeyDown={handleKeyDown}
+                      min="0"
+                      placeholder="0"
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm">units</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Buy Price <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm">Rs</span>
+                    <input
+                      type="number"
+                      value={buyPrice}
+                      onChange={(e) => setBuyPrice(e.target.value)}
+                      onWheel={(e) => e.currentTarget.blur()}
+                      onKeyDown={handleKeyDown}
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Sell Price <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm">Rs</span>
+                    <input
+                      type="number"
+                      value={sellPrice}
+                      onChange={(e) => setSellPrice(e.target.value)}
+                      onWheel={(e) => e.currentTarget.blur()}
+                      onKeyDown={handleKeyDown}
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Buy Price */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Buy Price <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={buyPrice}
-                  onChange={(e) => setBuyPrice(e.target.value)}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  onKeyDown={handleKeyDown}
-                  min="0"
-                  step="0.01"
-                  placeholder="Enter buy price"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
-                />
-              </div>
-
-              {/* Sell Price */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sell Price <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={sellPrice}
-                  onChange={(e) => setSellPrice(e.target.value)}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  onKeyDown={handleKeyDown}
-                  min="0"
-                  step="0.01"
-                  placeholder="Enter sell price"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
-                />
-              </div>
+              {/* Profit Preview */}
+              {buyPrice && sellPrice && parseFloat(buyPrice) > 0 && parseFloat(sellPrice) > 0 && (
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Profit Margin</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                        Rs {(parseFloat(sellPrice) - parseFloat(buyPrice)).toFixed(2)}
+                      </span>
+                      <span className="text-sm text-emerald-600 dark:text-emerald-500 ml-2">
+                        ({(((parseFloat(sellPrice) - parseFloat(buyPrice)) / parseFloat(buyPrice)) * 100).toFixed(1)}%)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
                 >
-                  {isSubmitting ? 'Adding Product...' : 'Add Product'}
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Adding Product...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Add Product
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={handleReset}
                   disabled={isSubmitting}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+                  className="px-6 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
                 >
                   Reset
                 </button>
@@ -354,60 +444,82 @@ export default function NewProductPage() {
             </form>
           </div>
 
-          {/* Right Column: Current Products List */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Existing Products</h3>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-3">
-                Total Products: <span className="font-semibold text-gray-800">{items.length}</span>
-              </p>
-              <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg bg-white">
-                <table className="min-w-full border-collapse">
-                  <thead className="bg-blue-500 text-white sticky top-0">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-semibold text-sm">Code</th>
-                      <th className="px-3 py-2 text-left font-semibold text-sm">Name</th>
-                      <th className="px-3 py-2 text-right font-semibold text-sm">Stock</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
-                          No products yet
-                        </td>
-                      </tr>
-                    ) : (
-                      items.map((item) => (
-                        <tr key={item.id} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="px-3 py-2 text-gray-700 text-sm">{item.code}</td>
-                          <td className="px-3 py-2 text-gray-700 text-sm">{item.name}</td>
-                          <td className={`px-3 py-2 text-right text-sm font-semibold ${
-                            item.current_stock <= 5 ? 'text-red-600' : 'text-gray-700'
-                          }`}>
-                            {item.current_stock}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          {/* Right Column: Current Products List - Takes 2 columns on xl */}
+          <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Existing Products</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Reference for unique codes</p>
+            </div>
+            
+            <div className="max-h-[500px] overflow-y-auto">
+              {items.length === 0 ? (
+                <div className="py-16 text-center">
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">No products yet</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Add your first product above</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {items.map((item) => (
+                    <div key={item.id} className="px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded">{item.code}</span>
+                          </div>
+                          <p className="font-medium text-slate-900 dark:text-white truncate mt-1">{item.name}</p>
+                        </div>
+                        <div className={`text-sm font-semibold px-2 py-1 rounded-lg ${
+                          item.current_stock <= 5 
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' 
+                            : item.current_stock <= 10
+                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                            : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                        }`}>
+                          {item.current_stock}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <span className="text-blue-500 text-xl">ℹ️</span>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
             <div>
-              <h4 className="font-semibold text-blue-900 mb-1">Important Notes:</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Product code must be unique - check the existing products list on the right</li>
-                <li>• All fields marked with <span className="text-red-500">*</span> are required</li>
-                <li>• Buy and sell prices must be greater than zero</li>
-                <li>• Stock amount defaults to 0 if not specified</li>
+              <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Quick Tips</h4>
+              <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1.5">
+                <li className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Product codes must be unique - check the list on the right
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Use arrow keys (↑↓) to navigate between fields quickly
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  All fields marked with <span className="text-red-500">*</span> are required
+                </li>
               </ul>
             </div>
           </div>
