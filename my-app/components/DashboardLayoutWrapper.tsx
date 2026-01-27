@@ -15,10 +15,42 @@ export default function DashboardLayoutWrapper({ children, userEmail, onLogout }
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const menuItems = [
-    { name: 'Products', path: '/dashboard/products', icon: '📦' },
-    { name: 'Billing', path: '/dashboard/billing', icon: '🧾' },
-    { name: 'Restock', path: '/dashboard/restock', icon: '📥' },
-    { name: 'New Product', path: '/dashboard/new-product', icon: '➕' },
+    { 
+      name: 'Products', 
+      path: '/dashboard/products', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Billing', 
+      path: '/dashboard/billing', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Restock', 
+      path: '/dashboard/restock', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      )
+    },
+    { 
+      name: 'New Product', 
+      path: '/dashboard/new-product', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      )
+    },
   ]
 
   const isActive = (path: string) => pathname === path
@@ -96,7 +128,7 @@ export default function DashboardLayoutWrapper({ children, userEmail, onLogout }
                         : 'text-gray-700 hover:bg-blue-50'
                     }`}
                   >
-                    <span className="text-xl">{item.icon}</span>
+                    {item.icon}
                     <span className="font-medium">{item.name}</span>
                   </Link>
                 </li>

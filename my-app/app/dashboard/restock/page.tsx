@@ -28,6 +28,34 @@ export default function RestockPage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const router = useRouter()
 
+  // Arrow key navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const form = e.currentTarget.form
+      if (!form) return
+
+      const formElements = Array.from(form.elements).filter(
+        (el): el is HTMLInputElement | HTMLTextAreaElement =>
+          (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
+          !el.disabled &&
+          el.type !== 'hidden'
+      )
+
+      const currentIndex = formElements.indexOf(e.currentTarget)
+      if (currentIndex === -1) return
+
+      let nextIndex: number
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex + 1 < formElements.length ? currentIndex + 1 : 0
+      } else {
+        nextIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : formElements.length - 1
+      }
+
+      formElements[nextIndex]?.focus()
+    }
+  }, [])
+
   const checkUser = useCallback(async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -286,6 +314,7 @@ export default function RestockPage() {
                   </div>
                 </div>
 
+                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                 {/* Stock Addition */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -296,6 +325,7 @@ export default function RestockPage() {
                     value={stockToAdd}
                     onChange={(e) => setStockToAdd(e.target.value === '' ? '' : parseInt(e.target.value))}
                     onWheel={(e) => e.currentTarget.blur()}
+                    onKeyDown={handleKeyDown}
                     min="0"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
                     placeholder="Enter quantity to add"
@@ -317,6 +347,7 @@ export default function RestockPage() {
                     value={newBuyPrice}
                     onChange={(e) => setNewBuyPrice(e.target.value)}
                     onWheel={(e) => e.currentTarget.blur()}
+                    onKeyDown={handleKeyDown}
                     min="0"
                     step="0.01"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
@@ -337,6 +368,7 @@ export default function RestockPage() {
                     value={newSellPrice}
                     onChange={(e) => setNewSellPrice(e.target.value)}
                     onWheel={(e) => e.currentTarget.blur()}
+                    onKeyDown={handleKeyDown}
                     min="0"
                     step="0.01"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
@@ -364,6 +396,7 @@ export default function RestockPage() {
                     Cancel
                   </button>
                 </div>
+                </form>
               </div>
             )}
           </div>

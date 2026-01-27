@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import { generateInvoicePDF } from '@/lib/generateInvoice'
@@ -29,6 +29,34 @@ export default function NewBillTab() {
   const [courierPrice, setCourierPrice] = useState<number | ''>('')
   const [isLoading, setIsLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+
+  // Arrow key navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const form = e.currentTarget.form
+      if (!form) return
+
+      const formElements = Array.from(form.elements).filter(
+        (el): el is HTMLInputElement | HTMLTextAreaElement =>
+          (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
+          !el.disabled &&
+          el.type !== 'hidden'
+      )
+
+      const currentIndex = formElements.indexOf(e.currentTarget)
+      if (currentIndex === -1) return
+
+      let nextIndex: number
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex + 1 < formElements.length ? currentIndex + 1 : 0
+      } else {
+        nextIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : formElements.length - 1
+      }
+
+      formElements[nextIndex]?.focus()
+    }
+  }, [])
 
   // Fetch all items on mount
   useEffect(() => {
@@ -310,7 +338,7 @@ export default function NewBillTab() {
         <div>
           <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Bill Details</h2>
           
-          <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+          <form className="space-y-3 sm:space-y-4 mb-4 sm:mb-6" onSubmit={(e) => e.preventDefault()}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Customer Name (Optional)
@@ -319,6 +347,7 @@ export default function NewBillTab() {
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Enter customer name"
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
               />
@@ -332,6 +361,7 @@ export default function NewBillTab() {
                 type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Enter phone number"
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
               />
@@ -344,6 +374,7 @@ export default function NewBillTab() {
               <textarea
                 value={customerAddress}
                 onChange={(e) => setCustomerAddress(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Enter customer address"
                 rows={2}
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 bg-white"
@@ -359,6 +390,7 @@ export default function NewBillTab() {
                 value={discountPrice}
                 onChange={(e) => setDiscountPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 onWheel={(e) => e.currentTarget.blur()}
+                onKeyDown={handleKeyDown}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
@@ -375,13 +407,14 @@ export default function NewBillTab() {
                 value={courierPrice}
                 onChange={(e) => setCourierPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 onWheel={(e) => e.currentTarget.blur()}
+                onKeyDown={handleKeyDown}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
               />
             </div>
-          </div>
+          </form>
 
           {/* Summary */}
           <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-2">
