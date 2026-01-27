@@ -151,14 +151,14 @@ export default function NewProductPage() {
     }
 
     const buyPriceNum = parseFloat(buyPrice)
-    if (!buyPrice || isNaN(buyPriceNum) || buyPriceNum <= 0) {
-      toast.error('Valid buy price is required')
+    if (buyPrice && (isNaN(buyPriceNum) || buyPriceNum < 0)) {
+      toast.error('Buy price cannot be negative')
       return false
     }
 
     const sellPriceNum = parseFloat(sellPrice)
-    if (!sellPrice || isNaN(sellPriceNum) || sellPriceNum <= 0) {
-      toast.error('Valid sell price is required')
+    if (sellPrice && (isNaN(sellPriceNum) || sellPriceNum < 0)) {
+      toast.error('Sell price cannot be negative')
       return false
     }
 
@@ -182,8 +182,8 @@ export default function NewProductPage() {
 
     try {
       const stock = typeof stockAmount === 'number' ? stockAmount : 0
-      const buyPriceNum = parseFloat(buyPrice)
-      const sellPriceNum = parseFloat(sellPrice)
+      const buyPriceNum = buyPrice ? parseFloat(buyPrice) : 0
+      const sellPriceNum = sellPrice ? parseFloat(sellPrice) : 0
 
       const { error } = await supabase
         .from('items_details')
@@ -329,7 +329,7 @@ export default function NewProductPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Initial Stock <span className="text-red-500">*</span>
+                    Initial Stock <span className="text-slate-400 dark:text-slate-500 font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <input
@@ -348,7 +348,7 @@ export default function NewProductPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Buy Price <span className="text-red-500">*</span>
+                    Buy Price <span className="text-slate-400 dark:text-slate-500 font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm">Rs</span>
@@ -368,7 +368,7 @@ export default function NewProductPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Sell Price <span className="text-red-500">*</span>
+                    Sell Price <span className="text-slate-400 dark:text-slate-500 font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm">Rs</span>
