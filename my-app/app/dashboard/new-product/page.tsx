@@ -32,6 +32,34 @@ export default function NewProductPage() {
   
   const router = useRouter()
 
+  // Arrow key navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const form = e.currentTarget.form
+      if (!form) return
+
+      const formElements = Array.from(form.elements).filter(
+        (el): el is HTMLInputElement | HTMLTextAreaElement =>
+          (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
+          !el.disabled &&
+          el.type !== 'hidden'
+      )
+
+      const currentIndex = formElements.indexOf(e.currentTarget)
+      if (currentIndex === -1) return
+
+      let nextIndex: number
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex + 1 < formElements.length ? currentIndex + 1 : 0
+      } else {
+        nextIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : formElements.length - 1
+      }
+
+      formElements[nextIndex]?.focus()
+    }
+  }, [])
+
   const checkUser = useCallback(async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -204,7 +232,7 @@ export default function NewProductPage() {
           {/* Left Column: Form */}
           <div>
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Product Information</h3>
-            <div className="space-y-4">
+            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
               {/* Code */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -214,6 +242,7 @@ export default function NewProductPage() {
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Enter product code"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
                 />
@@ -231,6 +260,7 @@ export default function NewProductPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Enter product name"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
                 />
@@ -244,6 +274,7 @@ export default function NewProductPage() {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Enter product description"
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 bg-white"
@@ -260,6 +291,7 @@ export default function NewProductPage() {
                   value={stockAmount}
                   onChange={(e) => setStockAmount(e.target.value === '' ? '' : parseInt(e.target.value))}
                   onWheel={(e) => e.currentTarget.blur()}
+                  onKeyDown={handleKeyDown}
                   min="0"
                   placeholder="Enter stock amount"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
@@ -276,6 +308,7 @@ export default function NewProductPage() {
                   value={buyPrice}
                   onChange={(e) => setBuyPrice(e.target.value)}
                   onWheel={(e) => e.currentTarget.blur()}
+                  onKeyDown={handleKeyDown}
                   min="0"
                   step="0.01"
                   placeholder="Enter buy price"
@@ -293,6 +326,7 @@ export default function NewProductPage() {
                   value={sellPrice}
                   onChange={(e) => setSellPrice(e.target.value)}
                   onWheel={(e) => e.currentTarget.blur()}
+                  onKeyDown={handleKeyDown}
                   min="0"
                   step="0.01"
                   placeholder="Enter sell price"
@@ -317,7 +351,7 @@ export default function NewProductPage() {
                   Reset
                 </button>
               </div>
-            </div>
+            </form>
           </div>
 
           {/* Right Column: Current Products List */}

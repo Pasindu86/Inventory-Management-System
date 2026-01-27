@@ -1,37 +1,70 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Toaster } from 'react-hot-toast'
+import { supabase } from '@/lib/supabase'
+import DashboardLayoutWrapper from '@/components/DashboardLayoutWrapper'
 import NewBillTab from '@/components/billing/NewBillTab'
 import HistoryTab from '@/components/billing/HistoryTab'
 
 export default function BillingPage() {
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new')
+  const [loading, setLoading] = useState(true)
+  const [userEmail, setUserEmail] = useState('')
   const router = useRouter()
 
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error('Supabase session error:', error)
+          if (error.message?.toLowerCase().includes('invalid refresh token')) {
+            await supabase.auth.signOut()
+          }
+        }
+
+        if (!session) {
+          setLoading(false)
+          router.push('/login')
+          return
+        }
+
+        setUserEmail(session.user.email || '')
+        setLoading(false)
+      } catch (err) {
+        console.error('Error validating session:', err)
+        setLoading(false)
+        router.push('/login')
+      }
+    }
+
+    void checkUser()
+  }, [router])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
+    <DashboardLayoutWrapper userEmail={userEmail} onLogout={handleLogout}>
       <Toaster position="top-right" />
       
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <button
-            onClick={() => router.push('/dashboard/products')}
-            className="flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
-            aria-label="Back to Products"
-          >
-            <svg 
-              className="w-5 h-5 sm:w-6 sm:h-6 transform group-hover:-translate-x-1 transition-transform" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm sm:text-base font-medium">Back to Products</span>
-          </button>
-        </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Billing & Invoices</h1>
         
         {/* Tabs */}
@@ -65,6 +98,6 @@ export default function BillingPage() {
           {activeTab === 'new' ? <NewBillTab /> : <HistoryTab />}
         </div>
       </div>
-    </div>
+    </DashboardLayoutWrapper>
   )
 }
