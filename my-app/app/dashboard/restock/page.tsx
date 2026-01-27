@@ -28,6 +28,34 @@ export default function RestockPage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const router = useRouter()
 
+  // Arrow key navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const form = e.currentTarget.form
+      if (!form) return
+
+      const formElements = Array.from(form.elements).filter(
+        (el): el is HTMLInputElement | HTMLTextAreaElement =>
+          (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
+          !el.disabled &&
+          el.type !== 'hidden'
+      )
+
+      const currentIndex = formElements.indexOf(e.currentTarget)
+      if (currentIndex === -1) return
+
+      let nextIndex: number
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex + 1 < formElements.length ? currentIndex + 1 : 0
+      } else {
+        nextIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : formElements.length - 1
+      }
+
+      formElements[nextIndex]?.focus()
+    }
+  }, [])
+
   const checkUser = useCallback(async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -75,8 +103,25 @@ export default function RestockPage() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut()
+      
+      // Clear all Supabase cookies
+      document.cookie.split(";").forEach((c) => {
+        const cookieName = c.split("=")[0].trim()
+        if (cookieName.startsWith('sb-')) {
+          document.cookie = cookieName + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'
+        }
+      })
+      
+      // Hard redirect to clear all state
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still redirect even if there's an error
+      window.location.href = '/login'
+    }
   }
 
   const filteredItems = items.filter(
@@ -161,209 +206,303 @@ export default function RestockPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-        <div className="text-blue-600 text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">Loading inventory...</p>
+        </div>
       </div>
     )
   }
 
+  const lowStockCount = items.filter(item => item.current_stock <= 5).length
+  const totalStockValue = items.reduce((sum, item) => sum + (item.current_stock * item.buy_price), 0)
+
   return (
     <DashboardLayoutWrapper userEmail={userEmail} onLogout={handleLogout}>
-      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Restock Inventory</h2>
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Restock Inventory</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Update stock quantities and pricing</p>
+          </div>
+        </div>
         
         {/* Summary Stats */}
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Total Items</p>
-            <p className="text-2xl font-bold text-blue-600">{items.length}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 card-hover">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Items</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">{items.length}</p>
+              </div>
+            </div>
           </div>
-          <div className="bg-red-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Low Stock Items (≤5)</p>
-            <p className="text-2xl font-bold text-red-600">
-              {items.filter(item => item.current_stock <= 5).length}
-            </p>
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 card-hover">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 ${lowStockCount > 0 ? 'bg-gradient-to-br from-red-500 to-red-600' : 'bg-gradient-to-br from-emerald-500 to-emerald-600'} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Low Stock (≤5)</p>
+                <p className={`text-2xl font-bold ${lowStockCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{lowStockCount}</p>
+              </div>
+            </div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Total Stock Value</p>
-            <p className="text-2xl font-bold text-green-600">
-              Rs {items.reduce((sum, item) => sum + (item.current_stock * item.buy_price), 0).toFixed(2)}
-            </p>
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 card-hover sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Stock Value</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">Rs {totalStockValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
           </div>
         </div>
         
         {/* Search Bar */}
-        <div className="mb-6">
+        <div className="relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by code or name..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
+            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Left Column: Items List */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Select Item</h3>
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg">
-                  <table className="min-w-full border-collapse">
-                    <thead className="bg-blue-500 text-white sticky top-0">
-                      <tr>
-                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-sm sm:text-base">Code</th>
-                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-sm sm:text-base">Name</th>
-                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-sm sm:text-base">Stock</th>
-                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-sm sm:text-base">Buy Price</th>
-                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-sm sm:text-base">Sell Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredItems.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                            No products found
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredItems.map((item) => (
-                          <tr
-                            key={item.id}
-                            onClick={() => handleSelectItem(item)}
-                            className={`border-b border-gray-200 cursor-pointer transition-colors ${
-                              selectedItem?.id === item.id 
-                                ? 'bg-blue-100' 
-                                : 'hover:bg-gray-50'
-                            }`}
-                          >
-                            <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 text-sm sm:text-base">{item.code}</td>
-                            <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 text-sm sm:text-base">{item.name}</td>
-                            <td className={`px-2 sm:px-4 py-2 sm:py-3 text-right text-sm sm:text-base font-semibold ${
-                              item.current_stock <= 5 ? 'text-red-600' : 'text-gray-700'
-                            }`}>
-                              {item.current_stock}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-700 text-sm sm:text-base">
-                              Rs {item.buy_price.toFixed(2)}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-700 text-sm sm:text-base">
-                              Rs {item.sell_price.toFixed(2)}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Select Item to Update</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{filteredItems.length} items available</p>
+            </div>
+            <div className="max-h-[500px] overflow-y-auto">
+              {filteredItems.length === 0 ? (
+                <div className="py-16 text-center">
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">No products found</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Try adjusting your search</p>
                 </div>
-              </div>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {filteredItems.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSelectItem(item)}
+                      className={`px-5 py-4 cursor-pointer transition-all ${
+                        selectedItem?.id === item.id 
+                          ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' 
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border-l-4 border-l-transparent'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded">{item.code}</span>
+                            {item.current_stock <= 5 && (
+                              <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-medium">Low Stock</span>
+                            )}
+                          </div>
+                          <p className="font-medium text-slate-900 dark:text-white mt-1 truncate">{item.name}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className={`text-lg font-bold ${item.current_stock <= 5 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+                            {item.current_stock}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">in stock</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        <span>Buy: Rs {item.buy_price.toFixed(2)}</span>
+                        <span>•</span>
+                        <span>Sell: Rs {item.sell_price.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Right Column: Update Form */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Update Details</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Update Details</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Modify stock and pricing</p>
+            </div>
+            
             {!selectedItem ? (
-              <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                Select an item from the list to update stock and prices
+              <div className="py-16 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                  </svg>
+                </div>
+                <p className="text-slate-600 dark:text-slate-300 font-medium">Select an item to update</p>
+                <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Click on any item from the list</p>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-                {/* Item Info */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-bold text-lg text-gray-900">{selectedItem.name}</h4>
-                  <p className="text-sm text-gray-600">Code: {selectedItem.code}</p>
-                  {selectedItem.description && (
-                    <p className="text-sm text-gray-600 mt-2">{selectedItem.description}</p>
-                  )}
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-sm font-semibold">
-                      Current Stock: <span className={selectedItem.current_stock <= 5 ? 'text-red-600' : 'text-green-600'}>
-                        {selectedItem.current_stock}
-                      </span>
-                    </p>
+              <div className="p-5 space-y-5">
+                {/* Item Info Card */}
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-700 dark:to-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <span className="text-xs font-mono bg-white dark:bg-slate-600 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-500">{selectedItem.code}</span>
+                      <h4 className="font-bold text-lg text-slate-900 dark:text-white mt-2">{selectedItem.name}</h4>
+                      {selectedItem.description && (
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{selectedItem.description}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
+                        selectedItem.current_stock <= 5 
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' 
+                          : selectedItem.current_stock <= 10
+                          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                          : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                      }`}>
+                        <span className="text-lg font-bold">{selectedItem.current_stock}</span>
+                        <span className="text-xs">units</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Stock Addition */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Add Stock Quantity
-                  </label>
-                  <input
-                    type="number"
-                    value={stockToAdd}
-                    onChange={(e) => setStockToAdd(e.target.value === '' ? '' : parseInt(e.target.value))}
-                    onWheel={(e) => e.currentTarget.blur()}
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
-                    placeholder="Enter quantity to add"
-                  />
-                  {(typeof stockToAdd === 'number' && stockToAdd > 0) && (
-                    <p className="mt-1 text-sm text-green-600">
-                      New stock will be: {selectedItem.current_stock + stockToAdd}
-                    </p>
-                  )}
-                </div>
+                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                  {/* Stock Addition */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Add Stock Quantity
+                    </label>
+                    <input
+                      type="number"
+                      value={stockToAdd}
+                      onChange={(e) => setStockToAdd(e.target.value === '' ? '' : parseInt(e.target.value))}
+                      onWheel={(e) => e.currentTarget.blur()}
+                      onKeyDown={handleKeyDown}
+                      min="0"
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                      placeholder="Enter quantity to add"
+                    />
+                    {(typeof stockToAdd === 'number' && stockToAdd > 0) && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        New stock will be: <span className="font-semibold">{selectedItem.current_stock + stockToAdd}</span>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Buy Price */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Buy Price (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    value={newBuyPrice}
-                    onChange={(e) => setNewBuyPrice(e.target.value)}
-                    onWheel={(e) => e.currentTarget.blur()}
-                    min="0"
-                    step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
-                    placeholder="Enter new buy price"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Current: Rs {selectedItem.buy_price.toFixed(2)}
-                  </p>
-                </div>
+                  {/* Price Fields Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Buy Price */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Buy Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">Rs</span>
+                        <input
+                          type="number"
+                          value={newBuyPrice}
+                          onChange={(e) => setNewBuyPrice(e.target.value)}
+                          onWheel={(e) => e.currentTarget.blur()}
+                          onKeyDown={handleKeyDown}
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                        Current: Rs {selectedItem.buy_price.toFixed(2)}
+                      </p>
+                    </div>
 
-                {/* Sell Price */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sell Price (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    value={newSellPrice}
-                    onChange={(e) => setNewSellPrice(e.target.value)}
-                    onWheel={(e) => e.currentTarget.blur()}
-                    min="0"
-                    step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-gray-900 placeholder-gray-400 bg-white"
-                    placeholder="Enter new sell price"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Current: Rs {selectedItem.sell_price.toFixed(2)}
-                  </p>
-                </div>
+                    {/* Sell Price */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Sell Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">Rs</span>
+                        <input
+                          type="number"
+                          value={newSellPrice}
+                          onChange={(e) => setNewSellPrice(e.target.value)}
+                          onWheel={(e) => e.currentTarget.blur()}
+                          onKeyDown={handleKeyDown}
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                        Current: Rs {selectedItem.sell_price.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={handleUpdate}
-                    disabled={isUpdating}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUpdating ? 'Updating...' : 'Update Item'}
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    disabled={isUpdating}
-                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={handleUpdate}
+                      disabled={isUpdating}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
+                    >
+                      {isUpdating ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Updating...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          Update Item
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      disabled={isUpdating}
+                      className="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-3 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
           </div>
