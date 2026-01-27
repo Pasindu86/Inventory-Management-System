@@ -25,6 +25,10 @@ export default function RestockPage() {
   const [stockToAdd, setStockToAdd] = useState<number | ''>('')
   const [newBuyPrice, setNewBuyPrice] = useState<string>('')
   const [newSellPrice, setNewSellPrice] = useState<string>('')
+  const [newCode, setNewCode] = useState<string>('')
+  const [newName, setNewName] = useState<string>('')
+  const [newDescription, setNewDescription] = useState<string>('')
+  const [showProductDetails, setShowProductDetails] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const router = useRouter()
 
@@ -135,6 +139,10 @@ export default function RestockPage() {
     setStockToAdd('')
     setNewBuyPrice(item.buy_price.toString())
     setNewSellPrice(item.sell_price.toString())
+    setNewCode(item.code)
+    setNewName(item.name)
+    setNewDescription(item.description || '')
+    setShowProductDetails(false)
   }
 
   const handleUpdate = async () => {
@@ -144,6 +152,9 @@ export default function RestockPage() {
     const buyPrice = newBuyPrice ? parseFloat(newBuyPrice) : selectedItem.buy_price
     const sellPrice = newSellPrice ? parseFloat(newSellPrice) : selectedItem.sell_price
     const stockQuantity = typeof stockToAdd === 'number' ? stockToAdd : 0
+    const code = newCode.trim() || selectedItem.code
+    const name = newName.trim() || selectedItem.name
+    const description = newDescription.trim() || null
 
     if (isNaN(buyPrice) || buyPrice < 0) {
       toast.error('Invalid buy price')
@@ -160,7 +171,36 @@ export default function RestockPage() {
       return
     }
 
-    if (stockQuantity === 0 && buyPrice === selectedItem.buy_price && sellPrice === selectedItem.sell_price) {
+    if (!code) {
+      toast.error('Product code cannot be empty')
+      return
+    }
+
+    if (!name) {
+      toast.error('Product name cannot be empty')
+      return
+    }
+
+    // Check if code already exists (if changed)
+    if (code !== selectedItem.code) {
+      const codeExists = items.some(
+        item => item.code.toLowerCase() === code.toLowerCase() && item.id !== selectedItem.id
+      )
+      if (codeExists) {
+        toast.error(`Product code "${code}" already exists`)
+        return
+      }
+    }
+
+    const hasChanges = 
+      stockQuantity !== 0 || 
+      buyPrice !== selectedItem.buy_price || 
+      sellPrice !== selectedItem.sell_price ||
+      code !== selectedItem.code ||
+      name !== selectedItem.name ||
+      description !== selectedItem.description
+
+    if (!hasChanges) {
       toast.error('No changes to update')
       return
     }
@@ -173,6 +213,9 @@ export default function RestockPage() {
       const { error } = await supabase
         .from('items_details')
         .update({
+          code: code,
+          name: name,
+          description: description,
           current_stock: newStock,
           buy_price: buyPrice,
           sell_price: sellPrice,
@@ -188,6 +231,10 @@ export default function RestockPage() {
       setStockToAdd('')
       setNewBuyPrice('')
       setNewSellPrice('')
+      setNewCode('')
+      setNewName('')
+      setNewDescription('')
+      setShowProductDetails(false)
       await fetchItems()
     } catch (error) {
       console.error('Error updating item:', error)
@@ -202,6 +249,10 @@ export default function RestockPage() {
     setStockToAdd('')
     setNewBuyPrice('')
     setNewSellPrice('')
+    setNewCode('')
+    setNewName('')
+    setNewDescription('')
+    setShowProductDetails(false)
   }
 
   if (loading) {
@@ -415,6 +466,74 @@ export default function RestockPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                         New stock will be: <span className="font-semibold">{selectedItem.current_stock + stockToAdd}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Edit Product Details Toggle */}
+                  <div className="border-t border-slate-200 dark:border-slate-600 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowProductDetails(!showProductDetails)}
+                      className="flex items-center justify-between w-full text-left text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit Product Details (Optional)
+                      </span>
+                      <svg className={`w-4 h-4 transition-transform ${showProductDetails ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {showProductDetails && (
+                      <div className="mt-4 space-y-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
+                        {/* Product Code */}
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Product Code
+                          </label>
+                          <input
+                            type="text"
+                            value={newCode}
+                            onChange={(e) => setNewCode(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="w-full px-4 py-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-mono"
+                            placeholder="Enter product code"
+                          />
+                        </div>
+
+                        {/* Product Name */}
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Product Name
+                          </label>
+                          <input
+                            type="text"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="w-full px-4 py-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                            placeholder="Enter product name"
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Description <span className="text-slate-400 dark:text-slate-500 font-normal">(Optional)</span>
+                          </label>
+                          <textarea
+                            value={newDescription}
+                            onChange={(e) => setNewDescription(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            rows={3}
+                            className="w-full px-4 py-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                            placeholder="Enter product description..."
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
