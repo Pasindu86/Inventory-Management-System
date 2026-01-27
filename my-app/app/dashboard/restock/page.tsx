@@ -30,6 +30,7 @@ export default function RestockPage() {
   const [newDescription, setNewDescription] = useState<string>('')
   const [showProductDetails, setShowProductDetails] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [stockOperation, setStockOperation] = useState<'add' | 'remove'>('add')
   const router = useRouter()
 
   // Arrow key navigation handler
@@ -143,6 +144,7 @@ export default function RestockPage() {
     setNewName(item.name)
     setNewDescription(item.description || '')
     setShowProductDetails(false)
+    setStockOperation('add')
   }
 
   const handleUpdate = async () => {
@@ -167,7 +169,12 @@ export default function RestockPage() {
     }
 
     if (stockQuantity < 0) {
-      toast.error('Stock to add cannot be negative')
+      toast.error('Stock quantity cannot be negative')
+      return
+    }
+
+    if (stockOperation === 'remove' && stockQuantity > selectedItem.current_stock) {
+      toast.error(`Cannot remove more than current stock (${selectedItem.current_stock} units)`)
       return
     }
 
@@ -208,7 +215,9 @@ export default function RestockPage() {
     setIsUpdating(true)
 
     try {
-      const newStock = selectedItem.current_stock + stockQuantity
+      const newStock = stockOperation === 'add' 
+        ? selectedItem.current_stock + stockQuantity
+        : selectedItem.current_stock - stockQuantity
 
       const { error } = await supabase
         .from('items_details')
@@ -235,6 +244,7 @@ export default function RestockPage() {
       setNewName('')
       setNewDescription('')
       setShowProductDetails(false)
+      setStockOperation('add')
       await fetchItems()
     } catch (error) {
       console.error('Error updating item:', error)
@@ -253,6 +263,7 @@ export default function RestockPage() {
     setNewName('')
     setNewDescription('')
     setShowProductDetails(false)
+    setStockOperation('add')
   }
 
   if (loading) {
@@ -445,10 +456,53 @@ export default function RestockPage() {
                 </div>
 
                 <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                  {/* Stock Addition */}
+                  {/* Stock Operation Toggle */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Add Stock Quantity
+                      Stock Operation
+                    </label>
+                    <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStockOperation('add')
+                          setStockToAdd('')
+                        }}
+                        className={`flex-1 py-2.5 px-4 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                          stockOperation === 'add'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Add Stock
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStockOperation('remove')
+                          setStockToAdd('')
+                        }}
+                        className={`flex-1 py-2.5 px-4 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                          stockOperation === 'remove'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                        Remove Stock
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stock Quantity */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      {stockOperation === 'add' ? 'Quantity to Add' : 'Quantity to Remove'}
                     </label>
                     <input
                       type="number"
@@ -457,15 +511,35 @@ export default function RestockPage() {
                       onWheel={(e) => e.currentTarget.blur()}
                       onKeyDown={handleKeyDown}
                       min="0"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                      placeholder="Enter quantity to add"
+                      max={stockOperation === 'remove' ? selectedItem.current_stock : undefined}
+                      className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:ring-2 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 ${
+                        stockOperation === 'remove' 
+                          ? 'border-red-200 dark:border-red-800 focus:ring-red-500/20' 
+                          : 'border-slate-200 dark:border-slate-600 focus:ring-blue-500/20'
+                      }`}
+                      placeholder={stockOperation === 'add' ? 'Enter quantity to add' : 'Enter quantity to remove'}
                     />
                     {(typeof stockToAdd === 'number' && stockToAdd > 0) && (
-                      <div className="mt-2 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                      <div className={`mt-2 flex items-center gap-2 text-sm ${
+                        stockOperation === 'add' 
+                          ? 'text-emerald-600 dark:text-emerald-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                          {stockOperation === 'add' ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                          ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                          )}
                         </svg>
-                        New stock will be: <span className="font-semibold">{selectedItem.current_stock + stockToAdd}</span>
+                        New stock will be: <span className="font-semibold">
+                          {stockOperation === 'add' 
+                            ? selectedItem.current_stock + stockToAdd 
+                            : Math.max(0, selectedItem.current_stock - stockToAdd)}
+                        </span>
+                        {stockOperation === 'remove' && stockToAdd > selectedItem.current_stock && (
+                          <span className="text-red-500 dark:text-red-400 font-medium">(exceeds current stock!)</span>
+                        )}
                       </div>
                     )}
                   </div>
