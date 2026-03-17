@@ -213,9 +213,7 @@ export default function NewBillTab() {
       // Generate PDF invoice
       generateInvoicePDF({
         billId: result.bill_id,
-        customerName: customerName || 'Walk-in Customer',
-        customerPhone: customerPhone || '',
-        customerAddress: customerAddress || '',
+
         items: cart,
         subtotal: calculateSubtotal(),
         discount: typeof discountPrice === 'number' ? discountPrice : 0,
