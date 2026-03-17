@@ -1,21 +1,21 @@
 import { jsPDF } from 'jspdf'
 
-interface InvoiceItem {
+interface QuotationItem {
   name: string
+  code: string
   quantity: number
   sell_price: number
+  discount: number
 }
 
-interface InvoiceData {
-  billId: string
-  items: InvoiceItem[]
+interface QuotationData {
+  items: QuotationItem[]
   subtotal: number
-  discount: number
-  courier: number
+  totalDiscount: number
   total: number
 }
 
-export function generateInvoicePDF(data: InvoiceData) {
+export function generateQuotationPDF(data: QuotationData) {
   const doc = new jsPDF()
   
   // Set font
@@ -37,12 +37,14 @@ export function generateInvoicePDF(data: InvoiceData) {
   // Invoice Title
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
-  doc.text('INVOICE', 105, 45, { align: 'center' })
+  doc.text('QUOTATION', 105, 45, { align: 'center' })
   
   // Invoice Details
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Invoice #: ${data.billId}`, 20, 55)
+  // random quote number or just skip it
+  const quoteRef = `QT-${Date.now().toString().slice(-6)}`
+  doc.text(`Ref #: ${quoteRef}`, 20, 55)
   doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 61)
   doc.text(`Time: ${new Date().toLocaleTimeString()}`, 20, 67)
   
@@ -52,23 +54,30 @@ export function generateInvoicePDF(data: InvoiceData) {
   doc.setFillColor(240, 240, 240)
   doc.rect(20, startY, 170, 8, 'F')
   
+  // Determine if any discounts exist
+  const hasDiscounts = data.items.some(item => (item.discount || 0) > 0)
+  
+  // Dynamic column X coordinates
   const colItemX = 22
-  const colQtyX = 130
-  const colPriceX = 150
-  const colTotalHeaderX = 188
-  const colTotalDataX = 188
+  const colQtyX = hasDiscounts ? 110 : 125
+  const colPriceX = hasDiscounts ? 125 : 150
+  const colDiscountX = 150 // Only if hasDiscounts
+  const colTotalX = 190
   
   doc.text('Item', colItemX, startY + 5)
   doc.text('Qty', colQtyX, startY + 5)
   doc.text('Price', colPriceX, startY + 5)
-  doc.text('Total', colTotalHeaderX, startY + 5, { align: 'right' })
+  if (hasDiscounts) {
+    doc.text('Discount', colDiscountX, startY + 5)
+  }
+  doc.text('Total', colTotalX, startY + 5, { align: 'right' })
   
   // Items
   doc.setFont('helvetica', 'normal')
   let currentY = startY + 15
   
   data.items.forEach((item) => {
-    const itemTotal = item.quantity * item.sell_price
+    const itemTotal = (item.sell_price - item.discount) * item.quantity
     
     // Check if we need a new page
     if (currentY > 250) {
@@ -79,7 +88,10 @@ export function generateInvoicePDF(data: InvoiceData) {
     doc.text(item.name, colItemX, currentY)
     doc.text(item.quantity.toString(), colQtyX, currentY)
     doc.text(`Rs. ${item.sell_price.toFixed(2)}`, colPriceX, currentY)
-    doc.text(`Rs. ${itemTotal.toFixed(2)}`, colTotalDataX, currentY, { align: 'right' })
+    if (hasDiscounts) {
+      doc.text(`Rs. ${item.discount.toFixed(2)}`, colDiscountX, currentY)
+    }
+    doc.text(`Rs. ${itemTotal.toFixed(2)}`, colTotalX, currentY, { align: 'right' })
     
     currentY += 7
   })
@@ -92,19 +104,13 @@ export function generateInvoicePDF(data: InvoiceData) {
   
   // Summary
   doc.setFont('helvetica', 'normal')
-  doc.text('Subtotal:', 130, currentY)
-  doc.text(`Rs. ${data.subtotal.toFixed(2)}`, 188, currentY, { align: 'right' })
+  doc.text('Subtotal:', 140, currentY)
+  doc.text(`Rs. ${data.subtotal.toFixed(2)}`, 190, currentY, { align: 'right' })
   currentY += 7
   
-  if (data.discount > 0) {
-    doc.text('Discount:', 130, currentY)
-    doc.text(`- Rs. ${data.discount.toFixed(2)}`, 188, currentY, { align: 'right' })
-    currentY += 7
-  }
-  
-  if (data.courier > 0) {
-    doc.text('Courier:', 130, currentY)
-    doc.text(`Rs. ${data.courier.toFixed(2)}`, 188, currentY, { align: 'right' })
+  if (data.totalDiscount > 0) {
+    doc.text('Total Discount:', 140, currentY)
+    doc.text(`- Rs. ${data.totalDiscount.toFixed(2)}`, 190, currentY, { align: 'right' })
     currentY += 7
   }
   
@@ -112,14 +118,14 @@ export function generateInvoicePDF(data: InvoiceData) {
   currentY += 3
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(12)
-  doc.text('Grand Total:', 130, currentY)
-  doc.text(`Rs. ${data.total.toFixed(2)}`, 188, currentY, { align: 'right' })
+  doc.text('Grand Total:', 140, currentY)
+  doc.text(`Rs. ${data.total.toFixed(2)}`, 190, currentY, { align: 'right' })
   
   // Footer
   doc.setFontSize(9)
   doc.setFont('helvetica', 'italic')
-  doc.text('Thank you for your business!', 105, 280, { align: 'center' })
+  doc.text('Thank you!', 105, 280, { align: 'center' })
   
   // Save PDF
-  doc.save(`invoice_${data.billId}_${Date.now()}.pdf`)
+  doc.save(`quotation_${quoteRef}.pdf`)
 }
