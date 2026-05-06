@@ -1,7 +1,9 @@
 -- Supabase RPC Function: create_complete_bill
--- This function creates a new bill, adds bill items, and updates inventory stock
+-- Calculates profit: sum((sell_price - buy_price) * quantity) - discount
 
--- Drop the existing function first
+-- IMPORTANT: Run this first to add the profit column:
+-- ALTER TABLE public.bills ADD COLUMN profit NUMERIC DEFAULT 0;
+
 DROP FUNCTION IF EXISTS create_complete_bill(text,text,numeric,numeric,numeric,jsonb);
 DROP FUNCTION IF EXISTS create_complete_bill(text,text,text,numeric,numeric,numeric,jsonb);
 
@@ -23,23 +25,19 @@ DECLARE
   v_item_id public.items_details.id%TYPE;
   v_quantity INTEGER;
   v_current_stock INTEGER;
+  v_buy_price NUMERIC;
+  v_sell_price NUMERIC;
+  v_total_profit NUMERIC := 0;
 BEGIN
-  -- Insert into bills table
-  INSERT INTO public.bills (name, phone, address, discount_price, courier_price, total_amount)
-  VALUES (p_name, p_phone, p_address, p_discount, p_courier, p_total)
-  RETURNING id INTO v_bill_id;
-
-  -- Loop through items and process each one
+  -- First pass: validate stock and calculate profit
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
   LOOP
     v_quantity := (v_item->>'quantity')::INTEGER;
-    -- Resolve item by matching textual id to support numeric or UUID identifiers
-    SELECT id, current_stock
-      INTO v_item_id, v_current_stock
+    SELECT id, current_stock, buy_price, sell_price
+      INTO v_item_id, v_current_stock, v_buy_price, v_sell_price
     FROM public.items_details
     WHERE id::TEXT = v_item->>'item_id';
 
-    -- Validate item existence and stock
     IF v_item_id IS NULL THEN
       RAISE EXCEPTION 'Item with identifier % not found', v_item->>'item_id';
     END IF;
@@ -53,22 +51,38 @@ BEGIN
         v_item_id::TEXT, v_current_stock, v_quantity;
     END IF;
 
-    -- Insert into bill-items table (note: table name has hyphen, so use double quotes)
+    -- profit per item = (sell_price - buy_price) * quantity
+    v_total_profit := v_total_profit + ((COALESCE(v_sell_price, 0) - COALESCE(v_buy_price, 0)) * v_quantity);
+  END LOOP;
+
+  -- Subtract discount from total profit
+  v_total_profit := v_total_profit - COALESCE(p_discount, 0);
+
+  -- Insert bill with profit
+  INSERT INTO public.bills (name, phone, address, discount_price, courier_price, total_amount, profit)
+  VALUES (p_name, p_phone, p_address, p_discount, p_courier, p_total, v_total_profit)
+  RETURNING id INTO v_bill_id;
+
+  -- Second pass: insert bill-items and update stock
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_quantity := (v_item->>'quantity')::INTEGER;
+    SELECT id INTO v_item_id
+    FROM public.items_details
+    WHERE id::TEXT = v_item->>'item_id';
+
     INSERT INTO public."bill-items" (bill_id, item_id, quantity)
     VALUES (v_bill_id, v_item_id, v_quantity);
 
-    -- Decrease stock in items_details
     UPDATE public.items_details
     SET current_stock = current_stock - v_quantity
     WHERE id = v_item_id;
   END LOOP;
 
-  -- Return success
   RETURN QUERY SELECT v_bill_id::TEXT, TRUE, 'Bill created successfully'::TEXT;
 
 EXCEPTION
   WHEN OTHERS THEN
-    -- Return error
     RETURN QUERY SELECT NULL::TEXT, FALSE, SQLERRM::TEXT;
 END;
 $$;
