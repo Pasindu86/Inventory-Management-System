@@ -53,15 +53,14 @@ export function generateInvoicePDF(data: InvoiceData) {
   doc.rect(20, startY, 170, 8, 'F')
   
   const colItemX = 22
-  const colQtyX = 130
-  const colPriceX = 150
-  const colTotalHeaderX = 188
-  const colTotalDataX = 188
+  const colQtyX = 100
+  const colPriceX = 148
+  const colTotalX = 188
   
   doc.text('Item', colItemX, startY + 5)
   doc.text('Qty', colQtyX, startY + 5)
-  doc.text('Price', colPriceX, startY + 5)
-  doc.text('Total', colTotalHeaderX, startY + 5, { align: 'right' })
+  doc.text('Price', colPriceX, startY + 5, { align: 'right' })
+  doc.text('Total', colTotalX, startY + 5, { align: 'right' })
   
   // Items
   doc.setFont('helvetica', 'normal')
@@ -78,8 +77,8 @@ export function generateInvoicePDF(data: InvoiceData) {
     
     doc.text(item.name, colItemX, currentY)
     doc.text(item.quantity.toString(), colQtyX, currentY)
-    doc.text(`Rs. ${item.sell_price.toFixed(2)}`, colPriceX, currentY)
-    doc.text(`Rs. ${itemTotal.toFixed(2)}`, colTotalDataX, currentY, { align: 'right' })
+    doc.text(`Rs. ${item.sell_price.toFixed(2)}`, colPriceX, currentY, { align: 'right' })
+    doc.text(`Rs. ${itemTotal.toFixed(2)}`, colTotalX, currentY, { align: 'right' })
     
     currentY += 7
   })

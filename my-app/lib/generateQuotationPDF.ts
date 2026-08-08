@@ -59,16 +59,16 @@ export function generateQuotationPDF(data: QuotationData) {
   
   // Dynamic column X coordinates
   const colItemX = 22
-  const colQtyX = hasDiscounts ? 110 : 125
-  const colPriceX = hasDiscounts ? 125 : 150
-  const colDiscountX = 150 // Only if hasDiscounts
+  const colQtyX = hasDiscounts ? 88 : 100
+  const colPriceX = hasDiscounts ? 128 : 148
+  const colDiscountX = 158 // Only if hasDiscounts
   const colTotalX = 190
   
   doc.text('Item', colItemX, startY + 5)
   doc.text('Qty', colQtyX, startY + 5)
-  doc.text('Price', colPriceX, startY + 5)
+  doc.text('Price', colPriceX, startY + 5, { align: 'right' })
   if (hasDiscounts) {
-    doc.text('Discount', colDiscountX, startY + 5)
+    doc.text('Discount', colDiscountX, startY + 5, { align: 'right' })
   }
   doc.text('Total', colTotalX, startY + 5, { align: 'right' })
   
@@ -87,9 +87,9 @@ export function generateQuotationPDF(data: QuotationData) {
     
     doc.text(item.name, colItemX, currentY)
     doc.text(item.quantity.toString(), colQtyX, currentY)
-    doc.text(`Rs. ${item.sell_price.toFixed(2)}`, colPriceX, currentY)
+    doc.text(`Rs. ${item.sell_price.toFixed(2)}`, colPriceX, currentY, { align: 'right' })
     if (hasDiscounts) {
-      doc.text(`Rs. ${item.discount.toFixed(2)}`, colDiscountX, currentY)
+      doc.text(`Rs. ${item.discount.toFixed(2)}`, colDiscountX, currentY, { align: 'right' })
     }
     doc.text(`Rs. ${itemTotal.toFixed(2)}`, colTotalX, currentY, { align: 'right' })
     
